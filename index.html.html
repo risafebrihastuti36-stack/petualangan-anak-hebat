@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Petualangan Anak Hebat</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Baloo+2:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
+  html, body { height:100%; overflow:hidden; font-family:'Fredoka', sans-serif; }
+  body {
+    background: linear-gradient(135deg, #FFE5EC 0%, #E0F4FF 50%, #FFF5D7 100%);
+    color:#3a3a5c;
+    touch-action:manipulation;
+  }
+  #app { width:100vw; height:100vh; position:relative; overflow:hidden; }
+  .screen {
+    position:absolute; inset:0;
+    display:none; flex-direction:column; align-items:center; justify-content:center;
+    padding:20px; overflow-y:auto;
+  }
+  .screen.active { display:flex; animation: fadeIn .5s ease; }
+  @keyframes fadeIn { from{opacity:0; transform:scale(.97);} to{opacity:1; transform:scale(1);} }
+  @keyframes bounce { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-15px);} }
+  @keyframes wiggle { 0%,100%{transform:rotate(-3deg);} 50%{transform:rotate(3deg);} }
+  @keyframes pop { 0%{transform:scale(0);} 60%{transform:scale(1.2);} 100%{transform:scale(1);} }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-10px);} }
+  @keyframes confetti { 0%{transform:translateY(-100vh) rotate(0); opacity:1;} 100%{transform:translateY(100vh) rotate(720deg); opacity:0;} }
+
+  /* ===== MENU UTAMA ===== */
+  #menuScreen {
+    background: radial-gradient(circle at 30% 20%, #FFE5EC, transparent 60%),
+                radial-gradient(circle at 70% 80%, #D4F1FF, transparent 60%),
+                linear-gradient(180deg, #FFF8E7 0%, #FFE5F1 100%);
+  }
+  .title {
+    font-family:'Baloo 2', cursive;
+    font-size: clamp(2rem, 6vw, 4.5rem);
+    color:#FF6B9D;
+    text-shadow: 4px 4px 0 #FFB6D5, 8px 8px 20px rgba(255,107,157,.3);
+    text-align:center;
+    line-height:1.1;
+    margin-bottom:10px;
+    animation: float 3s ease-in-out infinite;
+  }
+  .subtitle {
+    font-size: clamp(1rem, 2.5vw, 1.5rem);
+    color:#7B6B9E;
+    margin-bottom:20px;
+    text-align:center;
+    font-weight:600;
+  }
+  .bubu-container {
+    width: clamp(180px, 35vw, 280px);
+    height: clamp(180px, 35vw, 280px);
+    margin: 10px 0 20px;
+    animation: bounce 2.5s ease-in-out infinite;
+    filter: drop-shadow(0 15px 20px rgba(0,0,0,.15));
+  }
+  .btn {
+    font-family:'Fredoka', sans-serif;
+    font-weight:700;
+    font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+    padding: 18px 40px;
+    border:none;
+    border-radius: 50px;
+    cursor:pointer;
+    box-shadow: 0 8px 0 rgba(0,0,0,.15), 0 12px 25px rgba(0,0,0,.1);
+    transition: all .15s ease;
+    color:white;
+    min-width: 220px;
+    margin: 8px;
+    display:inline-flex; align-items:center; justify-content:center; gap:10px;
+    position:relative;
+  }
+  .btn:active { transform: translateY(4px); box-shadow: 0 4px 0 rgba(0,0,0,.15), 0 6px 15px rgba(0,0,0,.1); }
+  .btn-primary { background: linear-gradient(135deg, #FF8AB8, #FF6B9D); }
+  .btn-secondary { background: linear-gradient(135deg, #7FD4FF, #4FB8E8); }
+  .btn-success { background: linear-gradient(135deg, #8FE388, #5CC95C); }
+  .btn-warning { background: linear-gradient(135deg, #FFD166, #FFB347); }
+  .btn-small { padding: 10px 20px; font-size: 1rem; min-width: auto; }
+  .btn-icon { width:55px; height:55px; padding:0; border-radius:50%; min-width:auto; }
+
+  /* ===== PETA PETUALANGAN ===== */
+  #mapScreen {
+    background: linear-gradient(180deg, #B8E6FF 0%, #C8F5C8 60%, #FFE8B8 100%);
+    padding: 15px;
+  }
+  .map-header {
+    display:flex; justify-content:space-between; align-items:center;
+    width:100%; max-width:1000px; margin-bottom:10px;
+  }
+  .map-title {
+    font-family:'Baloo 2', cursive;
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    color:#FF6B9D;
+    text-shadow: 3px 3px 0 white;
+  }
+  .stars-total {
+    background:white;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: clamp(1rem, 2vw, 1.3rem);
+    font-weight:700;
+    color:#FFB347;
+    box-shadow: 0 4px 10px rgba(0,0,0,.1);
+  }
+  .worlds-grid {
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    width:100%; max-width:1100px;
+    padding: 10px;
+  }
+  .world-card {
+    background: white;
+    border-radius: 30px;
+    padding: 20px;
+    text-align:center;
+    cursor:pointer;
+    box-shadow: 0 8px 20px rgba(0,0,0,.1);
+    transition: all .2s ease;
+    position:relative;
+    border: 4px solid transparent;
+  }
+  .world-card:not(.locked):hover { transform: translateY(-5px) scale(1.03); }
+  .world-card:not(.locked):active { transform: scale(.97); }
+  .world-card.locked {
+    background: #E8E8F0;
+    cursor: not-allowed;
+    opacity: .7;
+  }
+  .world-card.completed { border-color: #FFD166; }
+  .world-emoji {
+    font-size: clamp(3rem, 6vw, 4.5rem);
+    margin-bottom: 10px;
+    display:block;
+  }
+  .world-name {
+    font-family:'Baloo 2', cursive;
+    font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+    color:#3a3a5c;
+    margin-bottom: 8px;
+  }
+  .world-desc {
+    font-size: clamp(.85rem, 1.5vw, 1rem);
+    color:#7B6B9E;
+    margin-bottom: 10px;
+    font-weight:500;
+  }
+  .world-stars {
+    font-size: 1.5rem;
+    letter-spacing: 3px;
+  }
+  .lock-icon {
+    position:absolute; top:15px; right:15px;
+    font-size: 1.8rem;
+  }
+
+  /* ===== GAME SCREEN ===== */
+  #gameScreen {
+    background: linear-gradient(180deg, #FFE5EC 0%, #E0F4FF 100%);
+    padding: 15px;
+  }
+  .game-header {
+    display:flex; justify-content:space-between; align-items:center;
+    width:100%; max-width:900px; margin-bottom:15px;
+  }
+  .progress-bar {
+    flex:1;
+    height: 25px;
+    background: white;
+    border-radius: 20px;
+    margin: 0 15px;
+    overflow:hidden;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,.1);
+    position:relative;
+  }
+  .progress-fill {
+    height:100%;
+    background: linear-gradient(90deg, #8FE388, #5CC95C);
+    border-radius: 20px;
+    transition: width .5s ease;
+    display:flex; align-items:center; justify-content:center;
+    color:white; font-weight:700; font-size:.9rem;
+  }
+  .question-container {
+    background: white;
+    border-radius: 30px;
+    padding: clamp(15px, 3vw, 30px);
+    width:100%; max-width:900px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.1);
+    text-align:center;
+  }
+  .question-text {
+    font-family:'Baloo 2', cursive;
+    font-size: clamp(1.3rem, 3vw, 2rem);
+    color:#3a3a5c;
+    margin-bottom: 20px;
+    line-height:1.3;
+  }
+  .question-visual {
+    min-height: 120px;
+    display:flex; align-items:center; justify-content:center;
+    flex-wrap:wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: linear-gradient(135deg, #FFF8E7, #FFE5F1);
+    border-radius: 20px;
+  }
+  .options-grid {
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+  }
+  .option-btn {
+    background: white;
+    border: 4px solid #E0E0F0;
+    border-radius: 25px;
+    padding: 15px;
+    font-family:'Fredoka', sans-serif;
+    font-size: clamp(1rem, 2vw, 1.3rem);
+    font-weight:600;
+    cursor:pointer;
+    transition: all .2s ease;
+    min-height: 90px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+    color:#3a3a5c;
+  }
+  .option-btn:hover { border-color: #7FD4FF; transform: translateY(-3px); }
+  .option-btn:active { transform: scale(.95); }
+  .option-btn.correct {
+    background: linear-gradient(135deg, #8FE388, #5CC95C);
+    color:white; border-color:#5CC95C;
+    animation: pop .5s ease;
+  }
+  .option-btn.wrong {
+    background: linear-gradient(135deg, #FFB8B8, #FF8888);
+    color:white; border-color:#FF8888;
+    animation: wiggle .5s ease;
+  }
+  .option-emoji { font-size: clamp(2rem, 4vw, 3rem); }
+  .color-swatch {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    border: 4px solid white;
+    box-shadow: 0 4px 10px rgba(0,0,0,.15);
+  }
+  .shape-preview {
+    width: 80px; height: 80px;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  /* ===== FEEDBACK ===== */
+  .feedback-overlay {
+    position:fixed; inset:0;
+    display:none; align-items:center; justify-content:center;
+    background: rgba(0,0,0,.4);
+    z-index: 100;
+    animation: fadeIn .3s ease;
+  }
+  .feedback-overlay.active { display:flex; }
+  .feedback-box {
+    background: white;
+    border-radius: 40px;
+    padding: 40px;
+    text-align:center;
+    max-width: 90%;
+    animation: pop .5s ease;
+  }
+  .feedback-emoji { font-size: 5rem; margin-bottom: 15px; display:block; }
+  .feedback-text {
+    font-family:'Baloo 2', cursive;
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    color:#3a3a5c;
+    margin-bottom: 20px;
+  }
+
+  /* ===== WORLD COMPLETE ===== */
+  .complete-box {
+    background: linear-gradient(135deg, #FFE5EC, #E0F4FF);
+    border-radius: 40px;
+    padding: 30px;
+    text-align:center;
+    max-width: 500px;
+    box-shadow: 0 15px 40px rgba(0,0,0,.2);
+  }
+  .big-stars {
+    font-size: 3rem;
+    letter-spacing: 10px;
+    margin: 15px 0;
+  }
+
+  /* ===== SERTIFIKAT ===== */
+  #certScreen {
+    background: linear-gradient(135deg, #FFE5EC 0%, #FFF5D7 50%, #D4F1FF 100%);
+  }
+  .certificate {
+    background: white;
+    border: 10px double #FFD166;
+    border-radius: 20px;
+    padding: 30px;
+    max-width: 700px;
+    width: 95%;
+    text-align:center;
+    box-shadow: 0 20px 50px rgba(0,0,0,.2);
+    position:relative;
+  }
+  .cert-title {
+    font-family:'Baloo 2', cursive;
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    color:#FF6B9D;
+    margin-bottom: 10px;
+  }
+  .cert-subtitle {
+    font-size: clamp(1rem, 2vw, 1.3rem);
+    color:#7B6B9E;
+    margin-bottom: 20px;
+  }
+  .cert-name {
+    font-family:'Baloo 2', cursive;
+    font-size: clamp(1.8rem, 5vw, 3rem);
+    color:#4FB8E8;
+    margin: 15px 0;
+    padding: 10px;
+    border-bottom: 3px dashed #FFD166;
+  }
+  .cert-bubu {
+    width: 120px; height: 120px;
+    margin: 15px auto;
+  }
+  .cert-seal {
+    font-size: 4rem;
+    margin: 10px 0;
+    animation: spin 10s linear infinite;
+  }
+
+  /* ===== CONFETTI ===== */
+  .confetti {
+    position: fixed;
+    width: 12px; height: 12px;
+    top: -20px;
+    pointer-events: none;
+    z-index: 200;
+    animation: confetti 3s linear forwards;
+  }
+
+  /* ===== SETTINGS ===== */
+  .settings-panel {
+    background: white;
+    border-radius: 30px;
+    padding: 30px;
+    max-width: 400px;
+    width: 90%;
+    text-align:center;
+    box-shadow: 0 15px 40px rgba(0,0,0,.2);
+  }
+  .setting-row {
+    display:flex; justify-content:space-between; align-items:center;
+    padding: 15px 0;
+    border-bottom: 2px dashed #E0E0F0;
+    font-size: 1.2rem;
+    font-weight:600;
+  }
+  .toggle {
+    width: 60px; height: 32px;
+    background: #E0E0F0;
+    border-radius: 20px;
+    position:relative;
+    cursor:pointer;
+    transition: background .2s;
+  }
+  .toggle.on { background: #5CC95C; }
+  .toggle::after {
+    content:'';
+    position:absolute;
+    width: 26px; height: 26px;
+    background: white;
+    border-radius: 50%;
+    top: 3px; left: 3px;
+    transition: left .2s;
+    box-shadow: 0 2px 5px rgba(0,0,0,.2);
+  }
+  .toggle.on::after { left: 31px; }
+
+  /* ===== POSITION GAME VISUAL ===== */
+  .position-scene {
+    width: 100%;
+    max-width: 400px;
+    height: 220px;
+    background: linear-gradient(180deg, #B8E6FF 0%, #C8F5C8 100%);
+    border-radius: 20px;
+    position: relative;
+    margin: 10px auto;
+    overflow:hidden;
+    border: 4px solid white;
+  }
+  .scene-ground {
+    position:absolute; bottom:0; left:0; right:0;
+    height: 40px;
+    background: #8FD88F;
+  }
+  .scene-item {
+    position:absolute;
+    font-size: 3rem;
+    transition: all .3s ease;
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 600px) {
+    .worlds-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+    .world-card { padding: 15px; }
+    .btn { padding: 14px 25px; min-width: 180px; }
+    .options-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (min-width: 1400px) {
+    .question-text { font-size: 2.2rem; }
+    .option-btn { font-size: 1.5rem; min-height: 110px; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ MENU UTAMA ============ -->
+  <div id="menuScreen" class="screen active">
+    <h1 class="title">🌟 PETUALANGAN<br>ANAK HEBAT 🌟</h1>
+    <p class="subtitle">Yuk belajar bersama Bubu! 🐻</p>
+    <div class="bubu-container" id="bubuMenu"></div>
+    <button class="btn btn-primary" onclick="startAdventure()">🚀 MULAI PETUALANGAN</button>
+    <button class="btn btn-secondary btn-small" onclick="showSettings()">⚙️ PENGATURAN SUARA</button>
+  </div>
+
+  <!-- ============ PETA PETUALANGAN ============ -->
+  <div id="mapScreen" class="screen">
+    <div class="map-header">
+      <button class="btn btn-small btn-warning" onclick="goToMenu()">🏠 Menu</button>
+      <h2 class="map-title">🗺️ Peta Petualangan</h2>
+      <div class="stars-total">⭐ <span id="totalStars">0</span>/15</div>
+    </div>
+    <div class="worlds-grid" id="worldsGrid"></div>
+  </div>
+
+  <!-- ============ GAME SCREEN ============ -->
+  <div id="gameScreen" class="screen">
+    <div class="game-header">
+      <button class="btn btn-small btn-warning" onclick="confirmExit()">🏠 Menu</button>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width:0%">1/5</div>
+      </div>
+      <div class="stars-total">⭐ <span id="currentStars">0</span></div>
+    </div>
+    <div class="question-container" id="questionContainer"></div>
+  </div>
+
+  <!-- ============ WORLD COMPLETE ============ -->
+  <div id="completeScreen" class="screen">
+    <div class="complete-box">
+      <span class="feedback-emoji">🎉</span>
+      <h2 class="cert-title" id="completeTitle">Hebat Sekali!</h2>
+      <p class="cert-subtitle" id="completeSubtitle">Kamu menyelesaikan tantangan!</p>
+      <div class="big-stars" id="completeStars">⭐⭐⭐</div>
+      <button class="btn btn-primary" onclick="goToMap()">🗺️ Lanjut Petualangan</button>
+    </div>
+  </div>
+
+  <!-- ============ SERTIFIKAT ============ -->
+  <div id="certScreen" class="screen">
+    <div class="certificate">
+      <div class="cert-seal">🏆</div>
+      <h1 class="cert-title">SERTIFIKAT ANAK HEBAT</h1>
+      <p class="cert-subtitle">Diberikan kepada:</p>
+      <div class="cert-name" id="certName">Anak Hebat</div>
+      <p class="cert-subtitle">Telah menyelesaikan semua petualangan bersama Bubu!</p>
+      <div class="cert-bubu" id="bubuCert"></div>
+      <p style="color:#7B6B9E; font-weight:600;">🌟 5 Dunia • 25 Tantangan • 15 Bintang 🌟</p>
+      <p style="color:#FF6B9D; font-family:'Baloo 2'; font-size:1.5rem; margin-top:15px;">Kamu Luar Biasa!</p>
+      <div style="margin-top:20px;">
+        <button class="btn btn-primary btn-small" onclick="goToMenu()">🏠 Main Lagi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SETTINGS ============ -->
+  <div id="settingsScreen" class="screen">
+    <div class="settings-panel">
+      <h2 class="cert-title">⚙️ Pengaturan</h2>
+      <div class="setting-row">
+        <span>🔊 Suara Narasi</span>
+        <div class="toggle on" id="toggleNarration" onclick="toggleSetting('narration')"></div>
+      </div>
+      <div class="setting-row">
+        <span>🎵 Musik</span>
+        <div class="toggle on" id="toggleMusic" onclick="toggleSetting('music')"></div>
+      </div>
+      <div class="setting-row">
+        <span>🔔 Efek Suara</span>
+        <div class="toggle on" id="toggleSfx" onclick="toggleSetting('sfx')"></div>
+      </div>
+      <div style="margin-top:20px;">
+        <button class="btn btn-primary btn-small" onclick="closeSettings()">✅ Selesai</button>
+      </div>
+      <div style="margin-top:15px;">
+        <button class="btn btn-small" style="background:#FF8888;" onclick="resetProgress()">🔄 Reset Permainan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ FEEDBACK OVERLAY ============ -->
+  <div class="feedback-overlay" id="feedbackOverlay">
+    <div class="feedback-box">
+      <span class="feedback-emoji" id="feedbackEmoji">🎉</span>
+      <div class="feedback-text" id="feedbackText">Benar!</div>
+      <button class="btn btn-primary btn-small" onclick="closeFeedback()">Lanjut ➡️</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* =========================================================
+   PETUALANGAN ANAK HEBAT - Game Engine
+   ========================================================= */
+
+// ===== STATE =====
+const STORAGE_KEY = 'petualangan-anak-hebat-v1';
+let state = {
+  progress: { 0:0, 1:0, 2:0, 3:0, 4:0 }, // stars per world
+  settings: { narration:true, music:true, sfx:true },
+  currentWorld: 0,
+  currentQuestion: 0,
+  questions: [],
+  correctCount: 0,
+  previousScreen: 'menuScreen'
+};
+
+// ===== WORLDS DATA =====
+const WORLDS = [
+  {
+    id:0, name:'HUTAN WARNA', emoji:'🌈',
+    desc:'Belajar mengenal warna',
+    bg:'linear-gradient(135deg, #FFE5EC, #FFD4E5)',
+    color:'#FF6B9D'
+  },
+  {
+    id:1, name:'PULAU ANGKA', emoji:'🔢',
+    desc:'Belajar menghitung 1-10',
+    bg:'linear-gradient(135deg, #D4F1FF, #B8E6FF)',
+    color:'#4FB8E8'
+  },
+  {
+    id:2, name:'KOTA BENTUK', emoji:'🔷',
+    desc:'Mengenal bentuk geometri',
+    bg:'linear-gradient(135deg, #E0D4FF, #D4B8FF)',
+    color:'#9B7FD4'
+  },
+  {
+    id:3, name:'KEBUN HEWAN', emoji:'🦁',
+    desc:'Mengenal hewan & suaranya',
+    bg:'linear-gradient(135deg, #FFF5D7, #FFE8B8)',
+    color:'#FFB347'
+  },
+  {
+    id:4, name:'DUNIA POSISI', emoji:'📍',
+    desc:'Atas, bawah, depan, belakang',
+    bg:'linear-gradient(135deg, #D4FFD4, #B8F5B8)',
+    color:'#5CC95C'
+  }
+];
+
+// ===== SOAL DATABASE =====
+const QUESTIONS = {
+  // --- HUTAN WARNA ---
+  0: [
+    { type:'color-name', q:'Ini warna apa?', visual:{color:'#FF4444'}, options:['Merah','Biru','Kuning','Hijau'], answer:'Merah' },
+    { type:'color-name', q:'Warna apa ini?', visual:{color:'#FFDD00'}, options:['Merah','Kuning','Ungu','Oranye'], answer:'Kuning' },
+    { type:'color-name', q:'Coba tebak warna ini!', visual:{color:'#3388FF'}, options:['Hijau','Biru','Merah','Cokelat'], answer:'Biru' },
+    { type:'color-name', q:'Warna apa ini?', visual:{color:'#33CC66'}, options:['Kuning','Ungu','Hijau','Merah'], answer:'Hijau' },
+    { type:'color-name', q:'Warna yang cantik ini?', visual:{color:'#AA55FF'}, options:['Ungu','Oranye','Pink','Putih'], answer:'Ungu' }
+  ],
+  // --- PULAU ANGKA ---
+  1: [
+    { type:'count', q:'Ada berapa apel?', visual:{emoji:'🍎', count:3}, options:['2','3','4','5'], answer:'3' },
+    { type:'count', q:'Hitung jumlah bintang!', visual:{emoji:'⭐', count:5}, options:['4','5','6','7'], answer:'5' },
+    { type:'count', q:'Berapa banyak bola?', visual:{emoji:'⚽', count:7}, options:['6','7','8','9'], answer:'7' },
+    { type:'count', q:'Ada berapa ikan?', visual:{emoji:'🐟', count:2}, options:['1','2','3','4'], answer:'2' },
+    { type:'count', q:'Hitung jumlah kue!', visual:{emoji:'🍰', count:10}, options:['8','9','10','11'], answer:'10' }
+  ],
+  // --- KOTA BENTUK ---
+  2: [
+    { type:'shape', q:'Bentuk apa ini?', visual:{shape:'circle', color:'#FF6B9D'}, options:['Lingkaran','Segitiga','Persegi','Persegi Panjang'], answer:'Lingkaran' },
+    { type:'shape', q:'Ini bentuk apa?', visual:{shape:'triangle', color:'#4FB8E8'}, options:['Lingkaran','Segitiga','Persegi','Oval'], answer:'Segitiga' },
+    { type:'shape', q:'Coba tebak bentuknya!', visual:{shape:'square', color:'#5CC95C'}, options:['Persegi Panjang','Persegi','Lingkaran','Segitiga'], answer:'Persegi' },
+    { type:'shape', q:'Bentuk apa ini?', visual:{shape:'rectangle', color:'#FFB347'}, options:['Persegi','Lingkaran','Persegi Panjang','Segitiga'], answer:'Persegi Panjang' },
+    { type:'shape', q:'Ini bentuk apa ya?', visual:{shape:'star', color:'#FFD166'}, options:['Bintang','Lingkaran','Hati','Segitiga'], answer:'Bintang' }
+  ],
+  // --- KEBUN HEWAN ---
+  3: [
+    { type:'animal', q:'Hewan apa ini?', visual:{emoji:'🐱', sound:'Meong meong!'}, options:['Kucing','Anjing','Sapi','Ayam'], answer:'Kucing' },
+    { type:'animal', q:'Siapa nama hewan ini?', visual:{emoji:'🐶', sound:'Guk guk!'}, options:['Kucing','Anjing','Kambing','Bebek'], answer:'Anjing' },
+    { type:'animal', q:'Hewan apa ini?', visual:{emoji:'🐮', sound:'Mooo!'}, options:['Kuda','Domba','Sapi','Kambing'], answer:'Sapi' },
+    { type:'animal', q:'Coba tebak hewan ini!', visual:{emoji:'🐔', sound:'Kukuruyuk!'}, options:['Bebek','Ayam','Burung','Angsa'], answer:'Ayam' },
+    { type:'animal', q:'Hewan apa ini?', visual:{emoji:'🦁', sound:'Aum!'}, options:['Harimau','Singa','Beruang','Serigala'], answer:'Singa' }
+  ],
+  // --- DUNIA POSISI ---
+  4: [
+    { type:'position', q:'Di mana kelinci berada?', scene:{main:'🐻', item:'🐰', position:'above'}, options:['Atas','Bawah','Samping','Depan'], answer:'Atas' },
+    { type:'position', q:'Di mana bola berada?', scene:{main:'🐻', item:'⚽', position:'below'}, options:['Atas','Bawah','Belakang','Samping'], answer:'Bawah' },
+    { type:'position', q:'Di mana burung berada?', scene:{main:'🐻', item:'🐦', position:'front'}, options:['Belakang','Depan','Atas','Samping'], answer:'Depan' },
+    { type:'position', q:'Di mana kucing berada?', scene:{main:'🐻', item:'🐱', position:'behind'}, options:['Depan','Belakang','Atas','Bawah'], answer:'Belakang' },
+    { type:'position', q:'Di mana bunga berada?', scene:{main:'🐻', item:'🌸', position:'side'}, options:['Atas','Bawah','Samping','Depan'], answer:'Samping' }
+  ]
+};
+
+// ===== AUDIO ENGINE =====
+let audioCtx = null;
+function initAudio() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch(e) { console.log('Audio not supported'); }
+  }
+}
+
+function playTone(freq, duration, type='sine', volume=0.15) {
+  if (!state.settings.sfx || !audioCtx) return;
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + duration);
+  } catch(e) {}
+}
+
+function playCorrect() {
+  playTone(523.25, 0.15, 'sine', 0.2);
+  setTimeout(()=>playTone(659.25, 0.15, 'sine', 0.2), 100);
+  setTimeout(()=>playTone(783.99, 0.3, 'sine', 0.2), 200);
+}
+
+function playWrong() {
+  playTone(220, 0.2, 'sawtooth', 0.15);
+  setTimeout(()=>playTone(180, 0.3, 'sawtooth', 0.15), 150);
+}
+
+function playClick() {
+  playTone(800, 0.05, 'square', 0.1);
+}
+
+function playWin() {
+  const notes = [523.25, 659.25, 783.99, 1046.50];
+  notes.forEach((n,i) => setTimeout(()=>playTone(n, 0.2, 'sine', 0.2), i*120));
+}
+
+// ===== SPEECH (TTS) =====
+let idVoice = null;
+function loadVoices() {
+  const voices = speechSynthesis.getVoices();
+  idVoice = voices.find(v => v.lang.startsWith('id')) ||
+            voices.find(v => v.lang.includes('ID')) ||
+            voices.find(v => v.lang === 'id-ID') ||
+            voices[0];
+}
+if ('speechSynthesis' in window) {
+  speechSynthesis.onvoiceschanged = loadVoices;
+  loadVoices();
+}
+
+function speak(text) {
+  if (!state.settings.narration) return;
+  if (!('speechSynthesis' in window)) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'id-ID';
+    u.rate = 0.9;
+    u.pitch = 1.2;
+    if (idVoice) u.voice = idVoice;
+    speechSynthesis.speak(u);
+  } catch(e) {}
+}
+
+// ===== BUBU SVG =====
+function bubuSVG(size=200) {
+  return `
+  <svg viewBox="0 0 200 200" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
+    <!-- Shadow -->
+    <ellipse cx="100" cy="185" rx="55" ry="8" fill="rgba(0,0,0,0.15)"/>
+    <!-- Body -->
+    <ellipse cx="100" cy="130" rx="55" ry="45" fill="#A67C52"/>
+    <!-- Backpack strap -->
+    <path d="M 70 105 Q 100 95 130 105" stroke="#5C3A1E" stroke-width="4" fill="none"/>
+    <!-- Backpack -->
+    <rect x="130" y="115" width="30" height="40" rx="8" fill="#FF6B9D"/>
+    <rect x="133" y="125" width="24" height="8" rx="2" fill="#FFD166"/>
+    <!-- Head -->
+    <circle cx="100" cy="75" r="50" fill="#C89975"/>
+    <!-- Ears -->
+    <circle cx="60" cy="45" r="15" fill="#A67C52"/>
+    <circle cx="60" cy="45" r="8" fill="#FFB6D5"/>
+    <circle cx="140" cy="45" r="15" fill="#A67C52"/>
+    <circle cx="140" cy="45" r="8" fill="#FFB6D5"/>
+    <!-- Face patch -->
+    <ellipse cx="100" cy="85" rx="30" ry="22" fill="#F5D9B8"/>
+    <!-- Eyes -->
+    <circle cx="85" cy="70" r="7" fill="#2C1810"/>
+    <circle cx="115" cy="70" r="7" fill="#2C1810"/>
+    <circle cx="87" cy="68" r="2.5" fill="white"/>
+    <circle cx="117" cy="68" r="2.5" fill="white"/>
+    <!-- Nose -->
+    <ellipse cx="100" cy="85" rx="6" ry="4" fill="#2C1810"/>
+    <!-- Mouth -->
+    <path d="M 92 95 Q 100 102 108 95" stroke="#2C1810" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <!-- Cheeks -->
+    <circle cx="72" cy="88" r="6" fill="#FFB6D5" opacity="0.7"/>
+    <circle cx="128" cy="88" r="6" fill="#FFB6D5" opacity="0.7"/>
+    <!-- Arms -->
+    <ellipse cx="55" cy="135" rx="12" ry="20" fill="#A67C52" transform="rotate(-20 55 135)"/>
+    <ellipse cx="145" cy="135" rx="12" ry="20" fill="#A67C52" transform="rotate(20 145 135)"/>
+    <!-- Feet -->
+    <ellipse cx="80" cy="172" rx="15" ry="10" fill="#8B6541"/>
+    <ellipse cx="120" cy="172" rx="15" ry="10" fill="#8B6541"/>
+  </svg>`;
+}
+
+// ===== STORAGE =====
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      progress: state.progress,
+      settings: state.settings
+    }));
+  } catch(e) {}
+}
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const data = JSON.parse(saved);
+      state.progress = { ...state.progress, ...data.progress };
+      state.settings = { ...state.settings, ...data.settings };
+    }
+  } catch(e) {}
+}
+
+// ===== NAVIGATION =====
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goToMenu() {
+  initAudio();
+  playClick();
+  state.previousScreen = 'menuScreen';
+  showScreen('menuScreen');
+  speak('Selamat datang di Petualangan Anak Hebat!');
+}
+
+function startAdventure() {
+  initAudio();
+  playClick();
+  showScreen('mapScreen');
+  renderMap();
+  speak('Pilih dunia petualangan yang ingin kamu jelajahi!');
+}
+
+function showSettings() {
+  initAudio();
+  playClick();
+  state.previousScreen = document.querySelector('.screen.active').id;
+  updateSettingsUI();
+  showScreen('settingsScreen');
+}
+
+function closeSettings() {
+  playClick();
+  showScreen(state.previousScreen || 'menuScreen');
+}
+
+function goToMap() {
+  playClick();
+  showScreen('mapScreen');
+  renderMap();
+}
+
+function confirmExit() {
+  if (confirm('Kembali ke menu? Progres dunia ini akan tersimpan.')) {
+    playClick();
+    goToMap();
+  }
+}
+
+function resetProgress() {
+  if (confirm('Yakin ingin menghapus semua progres permainan?')) {
+    state.progress = { 0:0, 1:0, 2:0, 3:0, 4:0 };
+    saveState();
+    alert('Progres telah direset!');
+    goToMenu();
+  }
+}
+
+// ===== SETTINGS =====
+function toggleSetting(key) {
+  state.settings[key] = !state.settings[key];
+  saveState();
+  updateSettingsUI();
+  playClick();
+}
+
+function updateSettingsUI() {
+  ['narration','music','sfx'].forEach(k => {
+    const el = document.getElementById('toggle' + k.charAt(0).toUpperCase() + k.slice(1));
+    if (el) el.classList.toggle('on', state.settings[k]);
+  });
+}
+
+// ===== MAP =====
+function renderMap() {
+  const grid = document.getElementById('worldsGrid');
+  grid.innerHTML = '';
+  let totalStars = 0;
+
+  WORLDS.forEach((w, i) => {
+    const stars = state.progress[i] || 0;
+    totalStars += stars;
+    const isUnlocked = i === 0 || state.progress[i-1] >= 1;
+    const isCompleted = stars === 3;
+
+    const card = document.createElement('div');
+    card.className = 'world-card' + (!isUnlocked ? ' locked' : '') + (isCompleted ? ' completed' : '');
+    card.style.background = isUnlocked ? w.bg : '';
+    card.innerHTML = `
+      ${!isUnlocked ? '<span class="lock-icon">🔒</span>' : ''}
+      <span class="world-emoji">${w.emoji}</span>
+      <div class="world-name">${w.name}</div>
+      <div class="world-desc">${w.desc}</div>
+      <div class="world-stars">${'⭐'.repeat(stars)}${'☆'.repeat(3-stars)}</div>
+    `;
+    if (isUnlocked) {
+      card.onclick = () => startWorld(i);
+    } else {
+      card.onclick = () => {
+        playWrong();
+        speak('Selesaikan dunia sebelumnya dulu ya!');
+      };
+    }
+    grid.appendChild(card);
+  });
+
+  document.getElementById('totalStars').textContent = totalStars;
+
+  // Check if all completed
+  if (totalStars >= 15) {
+    setTimeout(() => {
+      if (confirm('🎉 Selamat! Kamu sudah menyelesaikan semua dunia! Lihat sertifikat?')) {
+        showCertificate();
+      }
+    }, 500);
+  }
+}
+
+// ===== GAME LOGIC =====
+function startWorld(worldId) {
+  initAudio();
+  playClick();
+  state.currentWorld = worldId;
+  state.currentQuestion = 0;
+  state.correctCount = 0;
+  // Shuffle questions
+  state.questions = shuffleArray([...QUESTIONS[worldId]]);
+  showScreen('gameScreen');
+  renderQuestion();
+  const world = WORLDS[worldId];
+  speak(`Selamat datang di ${world.name}! ${world.desc}. Ayo kita mulai!`);
+}
+
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function renderQuestion() {
+  const q = state.questions[state.currentQuestion];
+  const container = document.getElementById('questionContainer');
+  const world = WORLDS[state.currentWorld];
+
+  // Update progress
+  const progress = ((state.currentQuestion) / 5) * 100;
+  document.getElementById('progressFill').style.width = progress + '%';
+  document.getElementById('progressFill').textContent = `${state.currentQuestion+1}/5`;
+  document.getElementById('currentStars').textContent = state.correctCount;
+
+  let visualHTML = '';
+  let optionsHTML = '';
+
+  // Build visual based on type
+  if (q.type === 'color-name') {
+    visualHTML = `<div class="color-swatch" style="background:${q.visual.color}; width:120px; height:120px;"></div>`;
+    optionsHTML = q.options.map(o =>
+      `<button class="option-btn" onclick="checkAnswer('${o}', '${q.answer}')">${o}</button>`
+    ).join('');
+  }
+  else if (q.type === 'count') {
+    let items = '';
+    for (let i = 0; i < q.visual.count; i++) {
+      items += `<span style="font-size:3rem; display:inline-block; animation: pop .4s ease ${i*0.1}s backwards;">${q.visual.emoji}</span>`;
+    }
+    visualHTML = items;
+    optionsHTML = q.options.map(o =>
+      `<button class="option-btn" onclick="checkAnswer('${o}', '${q.answer}')">
+        <span style="font-size:2.5rem; font-weight:700; color:${world.color};">${o}</span>
+      </button>`
+    ).join('');
+  }
+  else if (q.type === 'shape') {
+    visualHTML = renderShape(q.visual.shape, q.visual.color, 120);
+    optionsHTML = q.options.map(o =>
+      `<button class="option-btn" onclick="checkAnswer('${o}', '${q.answer}')">${o}</button>`
+    ).join('');
+  }
+  else if (q.type === 'animal') {
+    visualHTML = `<span style="font-size:6rem;">${q.visual.emoji}</span>`;
+    optionsHTML = q.options.map(o =>
+      `<button class="option-btn" onclick="checkAnswer('${o}', '${q.answer}')">${o}</button>`
+    ).join('');
+  }
+  else if (q.type === 'position') {
+    visualHTML = renderPositionScene(q.scene);
+    optionsHTML = q.options.map(o =>
+      `<button class="option-btn" onclick="checkAnswer('${o}', '${q.answer}')">${o}</button>`
+    ).join('');
+  }
+
+  container.innerHTML = `
+    <div class="question-text">${q.q}</div>
+    <div class="question-visual">${visualHTML}</div>
+    <div class="options-grid">${optionsHTML}</div>
+  `;
+
+  // Speak question
+  setTimeout(() => speak(q.q), 300);
+}
+
+function renderShape(shape, color, size) {
+  const s = size;
+  switch(shape) {
+    case 'circle':
+      return `<svg width="${s}" height="${s}"><circle cx="${s/2}" cy="${s/2}" r="${s/2-5}" fill="${color}" stroke="white" stroke-width="4"/></svg>`;
+    case 'triangle':
+      return `<svg width="${s}" height="${s}"><polygon points="${s/2},5 ${s-5},${s-5} 5,${s-5}" fill="${color}" stroke="white" stroke-width="4"/></svg>`;
+    case 'square':
+      return `<svg width="${s}" height="${s}"><rect x="5" y="5" width="${s-10}" height="${s-10}" fill="${color}" stroke="white" stroke-width="4"/></svg>`;
+    case 'rectangle':
+      return `<svg width="${s*1.5}" height="${s}"><rect x="5" y="10" width="${s*1.5-10}" height="${s-20}" fill="${color}" stroke="white" stroke-width="4"/></svg>`;
+    case 'star':
+      return `<svg width="${s}" height="${s}" viewBox="0 0 100 100"><polygon points="50,5 61,38 96,38 68,59 79,92 50,72 21,92 32,59 4,38 39,38" fill="${color}" stroke="white" stroke-width="3"/></svg>`;
+    default: return '';
+  }
+}
+
+function renderPositionScene(scene) {
+  let itemStyle = '';
+  switch(scene.position) {
+    case 'above': itemStyle = 'top:10px; left:50%; transform:translateX(-50%);'; break;
+    case 'below': itemStyle = 'bottom:10px; left:50%; transform:translateX(-50%);'; break;
+    case 'front': itemStyle = 'bottom:50px; left:50%; transform:translateX(-50%); font-size:3.5rem;'; break;
+    case 'behind': itemStyle = 'top:50px; left:50%; transform:translateX(-50%); font-size:2rem; opacity:.6; z-index:0;'; break;
+    case 'side': itemStyle = 'bottom:50px; right:30px;'; break;
+  }
+  return `
+    <div class="position-scene">
+      <div class="scene-ground"></div>
+      <div class="scene-item" style="bottom:50px; left:50%; transform:translateX(-50%); font-size:4rem; z-index:${scene.position==='behind'?1:2};">${scene.main}</div>
+      <div class="scene-item" style="${itemStyle} z-index:${scene.position==='behind'?1:3};">${scene.item}</div>
+    </div>
+  `;
+}
+
+function checkAnswer(selected, correct) {
+  const buttons = document.querySelectorAll('.option-btn');
+  buttons.forEach(b => b.onclick = null); // disable
+
+  if (selected === correct) {
+    playCorrect();
+    state.correctCount++;
+    // Highlight correct
+    buttons.forEach(b => {
+      if (b.textContent.trim() === selected) b.classList.add('correct');
+    });
+    showFeedback(true);
+  } else {
+    playWrong();
+    // Highlight wrong
+    buttons.forEach(b => {
+      if (b.textContent.trim() === selected) b.classList.add('wrong');
+    });
+    showFeedback(false, correct);
+  }
+}
+
+function showFeedback(correct, correctAnswer='') {
+  const overlay = document.getElementById('feedbackOverlay');
+  const emoji = document.getElementById('feedbackEmoji');
+  const text = document.getElementById('feedbackText');
+
+  if (correct) {
+    const praises = ['Hebat sekali! 🎉','Pintar! 🌟','Bagus! 👏','Keren! 🎊','Luar biasa! 💫'];
+    emoji.textContent = '🎉';
+    text.textContent = praises[Math.floor(Math.random()*praises.length)];
+    speak(text.textContent);
+    launchConfetti();
+  } else {
+    emoji.textContent = '💪';
+    text.textContent = `Coba lagi ya! Jawaban yang benar: ${correctAnswer}`;
+    speak('Oops, coba lagi ya! Jawaban yang benar adalah ' + correctAnswer);
+  }
+  overlay.classList.add('active');
+}
+
+function closeFeedback() {
+  playClick();
+  document.getElementById('feedbackOverlay').classList.remove('active');
+
+  // Check if answered correctly - move to next
+  const q = state.questions[state.currentQuestion];
+  const lastButtonWasCorrect = document.querySelector('.option-btn.correct') !== null;
+
+  if (lastButtonWasCorrect) {
+    state.currentQuestion++;
+    if (state.currentQuestion >= 5) {
+      completeWorld();
+    } else {
+      renderQuestion();
+    }
+  } else {
+    // Re-enable buttons for retry
+    setTimeout(() => {
+      document.querySelectorAll('.option-btn').forEach(b => {
+        b.classList.remove('wrong');
+        b.onclick = () => checkAnswer(b.textContent.trim(), q.answer);
+      });
+    }, 300);
+  }
+}
+
+function completeWorld() {
+  const stars = state.correctCount >= 5 ? 3 : state.correctCount >= 3 ? 2 : state.correctCount >= 1 ? 1 : 0;
+  if (stars > (state.progress[state.currentWorld] || 0)) {
+    state.progress[state.currentWorld] = stars;
+    saveState();
+  }
+
+  playWin();
+  launchConfetti(30);
+
+  document.getElementById('completeTitle').textContent =
+    stars === 3 ? 'SEMPURNA! 🏆' : stars === 2 ? 'Hebat! 🌟' : stars === 1 ? 'Bagus! 👍' : 'Tetap Semangat! 💪';
+  document.getElementById('completeSubtitle').textContent =
+    `Kamu menjawab ${state.correctCount} dari 5 soal dengan benar!`;
+  document.getElementById('completeStars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3-stars);
+
+  showScreen('completeScreen');
+  speak(`Selamat! Kamu mendapat ${stars} bintang!`);
+}
+
+function showCertificate() {
+  playWin();
+  launchConfetti(50);
+  document.getElementById('bubuCert').innerHTML = bubuSVG(120);
+  showScreen('certScreen');
+  speak('Selamat! Kamu adalah Anak Hebat! Kamu telah menyelesaikan semua petualangan bersama Bubu!');
+}
+
+// ===== CONFETTI =====
+function launchConfetti(count=15) {
+  const colors = ['#FF6B9D','#FFD166','#4FB8E8','#5CC95C','#9B7FD4','#FFB347'];
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => {
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      c.style.left = Math.random() * 100 + 'vw';
+      c.style.background = colors[Math.floor(Math.random()*colors.length)];
+      c.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+      c.style.animationDuration = (2 + Math.random()*2) + 's';
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 4000);
+    }, i * 50);
+  }
+}
+
+// ===== INIT =====
+function init() {
+  loadState();
+  updateSettingsUI();
+  document.getElementById('bubuMenu').innerHTML = bubuSVG(280);
+
+  // Unlock audio on first interaction
+  document.addEventListener('click', () => initAudio(), { once:true });
+  document.addEventListener('touchstart', () => initAudio(), { once:true });
+
+  // Welcome after short delay
+  setTimeout(() => {
+    speak('Halo! Selamat datang di Petualangan Anak Hebat! Aku Bubu, ayo belajar bersama!');
+  }, 800);
+}
+
+window.addEventListener('load', init);
+
+// Prevent double-tap zoom on iOS
+let lastTouch = 0;
+document.addEventListener('touchend', e => {
+  const now = Date.now();
+  if (now - lastTouch <= 300) e.preventDefault();
+  lastTouch = now;
+}, { passive:false });
+</script>
+</body>
+</html>
